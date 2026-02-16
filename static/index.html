@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SAM ⚡ Super Amusing Machine</title>
+    <meta name="description" content="Premium AI chatbot with streaming, voice, vision, and humor." />
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet" />
+
+    <!-- Highlight.js for code syntax highlighting -->
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
+    <link rel="stylesheet" href="/static/style.css" />
+</head>
+
+<body>
+
+    <!-- ─── Particle Canvas ──────────────────────────────────────────── -->
+    <canvas id="particleCanvas"></canvas>
+
+    <!-- ─── Toast Container ──────────────────────────────────────────── -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- ─── Image Lightbox ───────────────────────────────────────────── -->
+    <div class="lightbox" id="lightbox">
+        <button class="lightbox-close" id="lightboxClose">✕</button>
+        <img id="lightboxImg" src="" alt="Full size" />
+    </div>
+
+    <!-- ─── Drag & Drop Overlay ──────────────────────────────────────── -->
+    <div class="drop-overlay" id="dropOverlay">
+        <div class="drop-content">
+            <span class="drop-icon">📸</span>
+            <span class="drop-text">Drop image here</span>
+        </div>
+    </div>
+
+    <!-- ─── Sidebar ──────────────────────────────────────────────────── -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <div class="logo-icon"><span>⚡</span></div>
+                <div class="logo-text">
+                    <span class="logo-name">SAM</span>
+                    <span class="logo-sub">v3.0 · Ultimate</span>
+                </div>
+            </div>
+        </div>
+
+        <button class="new-chat-btn" id="newChatBtn" title="New chat (Ctrl+N)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+            New Chat
+        </button>
+
+        <!-- Search -->
+        <div class="sidebar-search">
+            <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2">
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+            <input type="text" id="searchInput" placeholder="Search chats..." />
+        </div>
+
+        <!-- Chat History -->
+        <div class="chat-history" id="chatHistory">
+            <div class="history-empty">No saved chats yet</div>
+        </div>
+
+        <!-- Settings -->
+        <div class="sidebar-settings">
+            <h3 class="settings-title">Settings</h3>
+            <div class="setting-row">
+                <label class="setting-label" for="ttsToggle"><span class="setting-icon">🔊</span> Auto Voice</label>
+                <div class="toggle-switch"><input type="checkbox" id="ttsToggle" /><span class="toggle-slider"></span>
+                </div>
+            </div>
+            <div class="setting-row">
+                <label class="setting-label" for="sfxToggle"><span class="setting-icon">🎵</span> Sound FX</label>
+                <div class="toggle-switch"><input type="checkbox" id="sfxToggle" checked /><span
+                        class="toggle-slider"></span></div>
+            </div>
+            <div class="setting-row">
+                <label class="setting-label" for="streamToggle"><span class="setting-icon">📡</span> Streaming</label>
+                <div class="toggle-switch"><input type="checkbox" id="streamToggle" checked /><span
+                        class="toggle-slider"></span></div>
+            </div>
+            <div class="setting-row">
+                <label class="setting-label" for="particleToggle"><span class="setting-icon">✨</span> Particles</label>
+                <div class="toggle-switch"><input type="checkbox" id="particleToggle" checked /><span
+                        class="toggle-slider"></span></div>
+            </div>
+        </div>
+
+        <!-- Shortcuts -->
+        <div class="shortcuts-info">
+            <h3 class="settings-title">Shortcuts</h3>
+            <div class="shortcut"><kbd>Enter</kbd> Send</div>
+            <div class="shortcut"><kbd>Shift+Enter</kbd> New line</div>
+            <div class="shortcut"><kbd>Ctrl+N</kbd> New chat</div>
+            <div class="shortcut"><kbd>Ctrl+M</kbd> Toggle mic</div>
+            <div class="shortcut"><kbd>Ctrl+E</kbd> Export chat</div>
+        </div>
+
+        <div class="sidebar-footer">
+            <button class="export-btn" id="exportBtn" title="Export chat (Ctrl+E)">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="7 10 12 15 17 10" />
+                    <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+                Export Chat
+            </button>
+            <div class="footer-badge"><span class="status-dot"></span> Powered by OpenRouter</div>
+        </div>
+    </aside>
+
+    <!-- ─── Main Chat ────────────────────────────────────────────────── -->
+    <main class="chat-container">
+        <!-- Header -->
+        <header class="chat-header">
+            <button class="menu-toggle" id="menuToggle">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="3" y1="6" x2="21" y2="6" />
+                    <line x1="3" y1="12" x2="21" y2="12" />
+                    <line x1="3" y1="18" x2="21" y2="18" />
+                </svg>
+            </button>
+
+            <div class="header-left">
+                <div class="ai-status-indicator" id="aiStatus">
+                    <div class="status-ring"></div>
+                    <span class="status-emoji">⚡</span>
+                </div>
+                <div class="header-info">
+                    <h1 class="chat-title">SAM</h1>
+                    <span class="chat-subtitle" id="chatSubtitle">Ready to chat</span>
+                </div>
+            </div>
+
+            <div class="header-right">
+                <div class="response-time" id="responseTime" style="display:none">
+                    <span class="rt-icon">⚡</span>
+                    <span class="rt-value" id="rtValue">0.0s</span>
+                </div>
+                <div class="header-badges">
+                    <span class="badge badge-stream">📡 Stream</span>
+                    <span class="badge badge-vision">👁️ Vision</span>
+                    <span class="badge badge-voice">🎤 Voice</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Messages -->
+        <div class="messages-wrapper" id="messagesWrapper">
+            <div class="messages" id="messages">
+                <div class="welcome-screen" id="welcomeScreen">
+                    <div class="welcome-glow"></div>
+                    <div class="welcome-avatar" id="welcomeAvatar">
+                        <span>⚡</span>
+                    </div>
+                    <h2 class="welcome-title">
+                        Hey! I'm <span class="gradient-text-animated">SAM</span>
+                    </h2>
+                    <p class="welcome-desc">Your ultimate AI sidekick — streaming responses, image vision, voice I/O,
+                        and terrible jokes. All at once.</p>
+
+                    <div class="feature-cards">
+                        <div class="feature-card fc-delay-1">
+                            <div class="fc-icon-wrap"><span>📡</span></div>
+                            <span class="fc-title">Streaming</span>
+                            <span class="fc-desc">Real-time token display</span>
+                        </div>
+                        <div class="feature-card fc-delay-2">
+                            <div class="fc-icon-wrap"><span>👁️</span></div>
+                            <span class="fc-title">Vision</span>
+                            <span class="fc-desc">Analyze any image</span>
+                        </div>
+                        <div class="feature-card fc-delay-3">
+                            <div class="fc-icon-wrap"><span>🎤</span></div>
+                            <span class="fc-title">Voice</span>
+                            <span class="fc-desc">Speak & listen</span>
+                        </div>
+                        <div class="feature-card fc-delay-4">
+                            <div class="fc-icon-wrap"><span>🧠</span></div>
+                            <span class="fc-title">Memory</span>
+                            <span class="fc-desc">Saves chat history</span>
+                        </div>
+                    </div>
+
+                    <div class="suggestion-chips">
+                        <button class="chip chip-delay-1"
+                            data-prompt="Tell me the funniest programming joke you know">😂 Tell me a joke</button>
+                        <button class="chip chip-delay-2"
+                            data-prompt="Explain quantum computing like I'm 5 but make it hilarious">💡 Quantum
+                            comedy</button>
+                        <button class="chip chip-delay-3"
+                            data-prompt="Write me a short funny poem about debugging code at 3am">📝 Debug poem</button>
+                        <button class="chip chip-delay-4"
+                            data-prompt="Give me 5 wild startup ideas that are so crazy they might work">🚀 Crazy
+                            ideas</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Input -->
+        <div class="input-area">
+            <form class="input-form" id="chatForm">
+                <div class="input-wrapper">
+                    <button type="button" class="icon-btn" id="imageUploadBtn"
+                        title="Upload image (drag & drop also works)">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <rect x="3" y="3" width="18" height="18" rx="2" />
+                            <circle cx="8.5" cy="8.5" r="1.5" />
+                            <polyline points="21 15 16 10 5 21" />
+                        </svg>
+                    </button>
+                    <input type="file" id="imageFileInput" accept="image/*" style="display:none" />
+
+                    <button type="button" class="icon-btn mic-btn" id="micBtn" title="Voice input (Ctrl+M)">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+                            <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                            <line x1="12" y1="19" x2="12" y2="23" />
+                            <line x1="8" y1="23" x2="16" y2="23" />
+                        </svg>
+                    </button>
+
+                    <!-- Voice Waveform (visible during recording) -->
+                    <canvas id="waveformCanvas" class="waveform-canvas" style="display:none"></canvas>
+
+                    <textarea id="userInput" placeholder="Ask SAM anything… or drag an image here" rows="1"
+                        autofocus></textarea>
+
+                    <button type="button" class="icon-btn stop-btn" id="stopTtsBtn" title="Stop speaking"
+                        style="display:none">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                            <rect x="6" y="6" width="12" height="12" rx="2" />
+                        </svg>
+                    </button>
+
+                    <button type="submit" class="send-btn" id="sendBtn" title="Send (Enter)">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5">
+                            <line x1="22" y1="2" x2="11" y2="13" />
+                            <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="image-preview-bar" id="imagePreviewBar" style="display:none">
+                    <img id="imagePreviewThumb" src="" alt="Preview" />
+                    <span id="imageFileName">image.png</span>
+                    <button type="button" class="remove-image-btn" id="removeImageBtn">✕</button>
+                </div>
+            </form>
+            <p class="disclaimer">SAM v3.0 · Streaming · <a href="https://openrouter.ai" target="_blank">OpenRouter</a>
+            </p>
+        </div>
+    </main>
+
+    <script src="/static/script.js"></script>
+</body>
+
+</html>
